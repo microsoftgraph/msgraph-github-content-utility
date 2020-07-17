@@ -29,11 +29,11 @@ namespace GitHubContentUtility.Helpers
         {
             // Generate JWT
             using var rsa = new RSACryptoServiceProvider();
-            var rsaParams = ToRSAParameters(GetPrivateKey(key));
+            var rsaParams = ToRSAParameters(GetPrivateKeyParameters(key));
             rsa.ImportParameters(rsaParams);
             return JWT.Encode(payload, rsa, JwsAlgorithm.RS256);
         }
-        private static RsaPrivateCrtKeyParameters GetPrivateKey(string privateKey)
+        private static RsaPrivateCrtKeyParameters GetPrivateKeyParameters(string privateKey)
         {
             using var privateKeyReader = new StringReader(privateKey);
             var pemReader = new PemReader(privateKeyReader);
