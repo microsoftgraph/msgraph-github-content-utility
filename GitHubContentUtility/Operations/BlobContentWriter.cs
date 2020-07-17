@@ -118,16 +118,21 @@ namespace GitHubContentUtility.Operations
                 }
 
                 // Add PR assignee
-                var issueUpdate = new IssueUpdate();
-                if (!string.IsNullOrEmpty(appConfig.PullRequestAssignee))
+                if (appConfig.PullRequestAssignee != null)
                 {
-                    issueUpdate.AddAssignee(appConfig.PullRequestAssignee);
+                    foreach(var assignee in appConfig.PullRequestAssignee)
+                {
+                        issueUpdate.AddAssignee(assignee);
+                }
                 }
 
                 // Add PR label
-                if (!string.IsNullOrEmpty(appConfig.PullRequestLabel))
+                if (appConfig.PullRequestLabel != null)
                 {
-                    issueUpdate.AddLabel(appConfig.PullRequestLabel);
+                    foreach (var label in appConfig.PullRequestLabel)
+                    {
+                        issueUpdate.AddLabel(label);
+                }
                 }
 
                 // Update the PR with the relevant info.
