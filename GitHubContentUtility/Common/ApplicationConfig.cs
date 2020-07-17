@@ -74,12 +74,12 @@ namespace GitHubContentUtility.Common
         /// <summary>
         /// Pull request assignee
         /// </summary>
-        public List<string> PullRequestAssignee { get; set; }
+        public List<string> PullRequestAssignees { get; set; }
 
         /// <summary>
         /// Pull request label
         /// </summary>
-        public List<string> PullRequestLabel { get; set; }
+        public List<string> PullRequestLabels { get; set; }
 
         /// <summary>
         /// The mode of the file being written to the repository
