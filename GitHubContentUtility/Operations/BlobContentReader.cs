@@ -57,7 +57,7 @@ namespace GitHubContentUtility.Operations
                        appConfig.GitHubRepoName,
                        appConfig.FileContentPath);
 
-                return fileContents.Any() ? fileContents[0].Content : null;
+                return fileContents.FirstOrDefault()?.Content;
             }
             catch (Exception ex)
             {
