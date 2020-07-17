@@ -59,9 +59,9 @@ namespace GitHubContentUtility.Operations
 
                 return fileContents.FirstOrDefault()?.Content;
             }
-            catch (Exception ex)
+            catch
             {
-                throw ex;
+                throw;
             }
         }
     }
