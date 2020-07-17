@@ -1,4 +1,4 @@
-// ------------------------------------------------------------------------------------------------------------------------------------------------------
+﻿// ------------------------------------------------------------------------------------------------------------------------------------------------------
 //  Copyright (c) Microsoft Corporation.  All Rights Reserved.  Licensed under the MIT License.  See License in the project root for license information.
 // ------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -69,16 +69,19 @@ namespace GitHubContentUtility.Operations
                 {
                     // Get reference of the working branch
                     var workingReference = await finalClient.Git.Reference.Get(appConfig.GitHubOrganization,
-                        appConfig.GitHubRepoName, workingBranch.Ref);
+                                               appConfig.GitHubRepoName,
+                                               workingBranch.Ref);
 
                     // Get the latest commit of this branch
-                    var latestCommit = await finalClient.Git.Commit.Get(appConfig.GitHubOrganization, appConfig.GitHubRepoName,
-                        workingReference.Object.Sha);
+                    var latestCommit = await finalClient.Git.Commit.Get(appConfig.GitHubOrganization,
+                                            appConfig.GitHubRepoName,
+                                            workingReference.Object.Sha);
 
                     // Create blob
                     NewBlob blob = new NewBlob { Encoding = EncodingType.Utf8, Content = appConfig.FileContent };
-                    BlobReference blobRef =
-                        await finalClient.Git.Blob.Create(appConfig.GitHubOrganization, appConfig.GitHubRepoName, blob);
+                    BlobReference blobRef = await finalClient.Git.Blob.Create(appConfig.GitHubOrganization,
+                                                appConfig.GitHubRepoName,
+                                                blob);
 
                     // Create new Tree
                     var tree = new NewTree { BaseTree = latestCommit.Tree.Sha };
@@ -88,42 +91,60 @@ namespace GitHubContentUtility.Operations
                     // Add items based on blobs
                     tree.Tree.Add(new NewTreeItem
                     {
-                        Path = appConfig.FileContentPath, Mode = treeMode.ToString(), Type = TreeType.Blob, Sha = blobRef.Sha
+                        Path = appConfig.FileContentPath,
+                                    Mode = treeMode.ToString(),
+                                    Type = TreeType.Blob,
+                                    Sha = blobRef.Sha
                     });
 
-                    var newTree = await finalClient.Git.Tree.Create(appConfig.GitHubOrganization, appConfig.GitHubRepoName, tree);
+                    var newTree = await finalClient.Git.Tree.Create(appConfig.GitHubOrganization,
+                                    appConfig.GitHubRepoName,
+                                    tree);
 
                     // Create a commit
-                    var newCommit = new NewCommit(appConfig.CommitMessage, newTree.Sha,
-                        workingReference.Object.Sha);
-                    var commit =
-                        await finalClient.Git.Commit.Create(appConfig.GitHubOrganization, appConfig.GitHubRepoName, newCommit);
+                    var newCommit = new NewCommit(appConfig.CommitMessage,
+                                        newTree.Sha,
+                                        workingReference.Object.Sha);
+
+                    var commit = await finalClient.Git.Commit.Create(appConfig.GitHubOrganization,
+                                    appConfig.GitHubRepoName,
+                                    newCommit);
 
                     // Push the commit
-                    await finalClient.Git.Reference.Update(appConfig.GitHubOrganization, appConfig.GitHubRepoName, workingBranch.Ref,
+                    await finalClient.Git.Reference.Update(appConfig.GitHubOrganization,
+                        appConfig.GitHubRepoName,
+                        workingBranch.Ref,
                         new ReferenceUpdate(commit.Sha));
                 }
 
                 // Create a PR
                 var pullRequest =
-                    await finalClient.Repository.PullRequest.Create(appConfig.GitHubOrganization, appConfig.GitHubRepoName,
-                    new NewPullRequest(appConfig.PullRequestTitle, appConfig.WorkingBranch, appConfig.ReferenceBranch) { Body = appConfig.PullRequestBody });
+                    await finalClient.Repository.PullRequest.Create(appConfig.GitHubOrganization,
+                        appConfig.GitHubRepoName,
+                        new NewPullRequest(appConfig.PullRequestTitle,
+                            appConfig.WorkingBranch,
+                            appConfig.ReferenceBranch)
+                            { Body = appConfig.PullRequestBody });
+
 
                 // Add PR reviewers
                 if (appConfig.Reviewers != null)
                 {
                     var reviewersResult = await finalClient.Repository.PullRequest.ReviewRequest.Create(appConfig.GitHubOrganization,
-                    appConfig.GitHubRepoName, pullRequest.Number,
+                    appConfig.GitHubRepoName,
+                    pullRequest.Number,
                     new PullRequestReviewRequest(appConfig.Reviewers.AsReadOnly(), null));
                 }
+
+                var issueUpdate = new IssueUpdate();
 
                 // Add PR assignee
                 if (appConfig.PullRequestAssignee != null)
                 {
                     foreach(var assignee in appConfig.PullRequestAssignee)
-                {
+                    {
                         issueUpdate.AddAssignee(assignee);
-                }
+                    }
                 }
 
                 // Add PR label
@@ -132,15 +153,17 @@ namespace GitHubContentUtility.Operations
                     foreach (var label in appConfig.PullRequestLabel)
                     {
                         issueUpdate.AddLabel(label);
-                }
+                    }
                 }
 
                 // Update the PR with the relevant info.
                 if (issueUpdate.Assignees != null ||
                     issueUpdate.Labels != null)
                 {
-                    await finalClient.Issue.Update(appConfig.GitHubOrganization, appConfig.GitHubRepoName, pullRequest.Number,
-                    issueUpdate);
+                    await finalClient.Issue.Update(appConfig.GitHubOrganization,
+                        appConfig.GitHubRepoName,
+                        pullRequest.Number,
+                        issueUpdate);
                 }
             }
             catch
