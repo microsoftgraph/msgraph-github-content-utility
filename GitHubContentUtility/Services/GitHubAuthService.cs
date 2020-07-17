@@ -18,8 +18,6 @@ namespace GitHubContentUtility.Services
     /// </summary>
     public static class GitHubAuthService
     {
-        private static readonly long TicksSince197011 = new DateTime(1970, 1, 1).Ticks;
-
         public static async Task<string> GetGithubAppTokenAsync(ApplicationConfig appConfig, string privateKey)
         {
             if (appConfig == null)
@@ -33,12 +31,12 @@ namespace GitHubContentUtility.Services
 
             try
             {
-                var utcNow = DateTime.UtcNow;
+                var dtoUtc = DateTimeOffset.UtcNow;
                 var payload = new Dictionary<string, object>
                 {
-                    {"iat", ToUtcSeconds(utcNow)},
-                    {"exp", ToUtcSeconds(utcNow.AddSeconds(600))}, // 10 minutes is the maximum time allowed
-                    {"iss",  appConfig.GitHubAppId} // The GitHub App Id
+                    {"iat", dtoUtc.ToUnixTimeSeconds()},
+                    {"exp", dtoUtc.AddMinutes(10).ToUnixTimeSeconds()}, // 10 minutes is the maximum time allowed
+                    {"iss", appConfig.GitHubAppId} // The GitHub App Id
                 };
 
                 var jwtToken = JwtHelper.CreateEncodedJwtToken(privateKey, payload);
@@ -59,15 +57,10 @@ namespace GitHubContentUtility.Services
 
                 return response.Token;
             }
-            catch (Exception ex)
+            catch
             {
-                throw ex;
+                throw;
             }
-        }
-
-        private static long ToUtcSeconds(DateTime dt)
-        {
-            return (dt.ToUniversalTime().Ticks - TicksSince197011) / TimeSpan.TicksPerSecond;
         }
     }
 }
