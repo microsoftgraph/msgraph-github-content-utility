@@ -2,15 +2,16 @@
 //  Copyright (c) Microsoft Corporation.  All Rights Reserved.  Licensed under the MIT License.  See License in the project root for license information.
 // ------------------------------------------------------------------------------------------------------------------------------------------------------
 
-using System;
+// Partially ported from: https://github.com/microsoftgraph/msgraph-samples-dashboard/blob/dev/SamplesDashboard/SamplesDashboard/Helper/JWTHelper.cs
+
 using System.Collections.Generic;
 using Jose;
 using Org.BouncyCastle.Crypto;
 using Org.BouncyCastle.Crypto.Parameters;
-using Org.BouncyCastle.Math;
 using Org.BouncyCastle.OpenSsl;
 using System.IO;
 using System.Security.Cryptography;
+using Org.BouncyCastle.Security;
 
 namespace GitHubContentUtility.Helpers
 {
@@ -29,45 +30,17 @@ namespace GitHubContentUtility.Helpers
         {
             // Generate JWT
             using var rsa = new RSACryptoServiceProvider();
-            var rsaParams = ToRSAParameters(GetPrivateKeyParameters(key));
+            var rsaParams = DotNetUtilities.ToRSAParameters(GetPrivateKeyParameters(key));
             rsa.ImportParameters(rsaParams);
             return JWT.Encode(payload, rsa, JwsAlgorithm.RS256);
         }
+
         private static RsaPrivateCrtKeyParameters GetPrivateKeyParameters(string privateKey)
         {
             using var privateKeyReader = new StringReader(privateKey);
             var pemReader = new PemReader(privateKeyReader);
             var keyPair = (AsymmetricCipherKeyPair)pemReader.ReadObject();
             return (RsaPrivateCrtKeyParameters)keyPair.Private;
-        }
-
-        private static RSAParameters ToRSAParameters(RsaPrivateCrtKeyParameters privKey)
-        {
-            var rp = new RSAParameters
-            {
-                Modulus = privKey.Modulus.ToByteArrayUnsigned(),
-                Exponent = privKey.PublicExponent.ToByteArrayUnsigned(),
-                P = privKey.P.ToByteArrayUnsigned(),
-                Q = privKey.Q.ToByteArrayUnsigned()
-            };
-            rp.D = ConvertRSAParametersField(privKey.Exponent, rp.Modulus.Length);
-            rp.DP = ConvertRSAParametersField(privKey.DP, rp.P.Length);
-            rp.DQ = ConvertRSAParametersField(privKey.DQ, rp.Q.Length);
-            rp.InverseQ = ConvertRSAParametersField(privKey.QInv, rp.Q.Length);
-            return rp;
-        }
-
-        private static byte[] ConvertRSAParametersField(BigInteger n, int size)
-        {
-            byte[] bs = n.ToByteArrayUnsigned();
-            if (bs.Length == size)
-                return bs;
-            if (bs.Length > size)
-                throw new ArgumentException("Specified size too small", nameof(size));
-
-            byte[] padded = new byte[size];
-            Array.Copy(bs, 0, padded, size - bs.Length, bs.Length);
-            return padded;
         }
     }
 }

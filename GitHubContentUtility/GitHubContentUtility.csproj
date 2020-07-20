@@ -7,6 +7,7 @@
 <ItemGroup>
     <PackageReference Include="GitHubJwt" Version="0.0.4" />
     <PackageReference Include="Octokit" Version="0.48.0" />
+    <PackageReference Include="Portable.BouncyCastle" Version="1.8.6.7" />
   </ItemGroup>
 
 </Project>
