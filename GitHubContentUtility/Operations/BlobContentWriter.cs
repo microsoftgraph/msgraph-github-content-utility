@@ -29,6 +29,10 @@ namespace GitHubContentUtility.Operations
             {
                 throw new ArgumentNullException(nameof(appConfig), "Parameter cannot be null");
             }
+            if (string.IsNullOrEmpty(privateKey))
+            {
+                throw new ArgumentNullException(nameof(privateKey), "Parameter cannot be null or empty");
+            }
 
             try
             {
