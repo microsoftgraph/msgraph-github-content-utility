@@ -2,7 +2,6 @@
 //  Copyright (c) Microsoft Corporation.  All Rights Reserved.  Licensed under the MIT License.  See License in the project root for license information.
 // ------------------------------------------------------------------------------------------------------------------------------------------------------
 
-using Octokit;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
@@ -29,19 +28,17 @@ namespace GitHubContentUtility.Operations
             {
                 throw new ArgumentNullException(nameof(appConfig), "Parameter cannot be null");
             }
+            if (string.IsNullOrEmpty(privateKey))
+            {
+                throw new ArgumentNullException(nameof(privateKey), "Parameter cannot be null or empty");
+            }
 
             try
             {
-                string token = await GitHubAuthService.GetGithubAppTokenAsync(appConfig, privateKey);
-
-                // Pass the JWT as a bearer token to Octokit.net
-                var finalClient = new GitHubClient(new ProductHeaderValue(appConfig.GitHubAppName))
-                {
-                    Credentials = new Credentials(token, AuthenticationType.Bearer)
-                };
+                var gitHubClient = GitHubClientFactory.GetGitHubClient(appConfig, privateKey);
 
                 // Get repo references
-                var references = await finalClient.Git.Reference.GetAll(appConfig.GitHubOrganization, appConfig.GitHubRepoName);
+                var references = await gitHubClient.Git.Reference.GetAll(appConfig.GitHubOrganization, appConfig.GitHubRepoName);
 
                 // Check if the reference branch is in the refs
                 var referenceBranch = references.Where(reference => reference.Ref == $"refs/heads/{appConfig.ReferenceBranch}").FirstOrDefault();
@@ -52,7 +49,7 @@ namespace GitHubContentUtility.Operations
                 }
 
                 // Read from the reference branch
-                var fileContents = await finalClient.Repository.Content.GetAllContents(
+                var fileContents = await gitHubClient.Repository.Content.GetAllContents(
                        appConfig.GitHubOrganization,
                        appConfig.GitHubRepoName,
                        appConfig.FileContentPath);
