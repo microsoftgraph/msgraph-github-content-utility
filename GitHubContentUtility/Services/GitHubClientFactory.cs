@@ -11,7 +11,7 @@ namespace GitHubContentUtility.Services
     /// <summary>
     /// Provides utility method that returns an authenticated GitHub client.
     /// </summary>
-    public static class GitHubClientFactory
+    internal static class GitHubClientFactory
     {
         /// <summary>
         /// Gets an authenticated GitHub client.
@@ -20,7 +20,7 @@ namespace GitHubContentUtility.Services
         /// for connecting to the specified GitHub repository.</param>
         /// <param name="privateKey">The RSA private key of a registered GitHub app installed in the specified repository.</param>
         /// <returns>An authenticated GitHub client.</returns>
-        public static GitHubClient GetGitHubClient(ApplicationConfig appConfig, string privateKey)
+        internal static GitHubClient GetGitHubClient(ApplicationConfig appConfig, string privateKey)
         {
             if (appConfig == null)
             {

@@ -16,7 +16,7 @@ namespace GitHubContentUtility.Services
     /// Provides methods for authenticating a GitHub app with a GitHub repository to
     /// obtain a Jwt token for making calls to the respective repository.
     /// </summary>
-    public static class GitHubAuthService
+    internal static class GitHubAuthService
     {
         /// <summary>
         /// Gets a GitHub access token.
@@ -25,7 +25,7 @@ namespace GitHubContentUtility.Services
         /// for connecting to the specified GitHub repository.</param>
         /// <param name="privateKey">The RSA private key of a registered GitHub app installed in the specified repository.</param>
         /// <returns>Access token.</returns>
-        public static async Task<string> GetGithubAppTokenAsync(ApplicationConfig appConfig, string privateKey)
+        internal static async Task<string> GetGithubAppTokenAsync(ApplicationConfig appConfig, string privateKey)
         {
             if (appConfig == null)
             {
