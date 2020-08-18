@@ -18,6 +18,13 @@ namespace GitHubContentUtility.Services
     /// </summary>
     public static class GitHubAuthService
     {
+        /// <summary>
+        /// Gets a GitHub access token.
+        /// </summary>
+        /// <param name="appConfig">The application configuration object which contains values
+        /// for connecting to the specified GitHub repository.</param>
+        /// <param name="privateKey">The RSA private key of a registered GitHub app installed in the specified repository.</param>
+        /// <returns>Access token.</returns>
         public static async Task<string> GetGithubAppTokenAsync(ApplicationConfig appConfig, string privateKey)
         {
             if (appConfig == null)
