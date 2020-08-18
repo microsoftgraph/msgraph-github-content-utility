@@ -13,7 +13,7 @@ namespace GitHubContentUtility.Operations
     /// <summary>
     /// Provides methods for reading the contents of a specific blob in a GitHub repository.
     /// </summary>
-    public class BlobContentReader
+    public static class BlobContentReader
     {
         /// <summary>
         /// Reads the contents of a specified blob in the specified GitHub repository.
@@ -22,7 +22,7 @@ namespace GitHubContentUtility.Operations
         /// for connecting to the specified GitHub repository.</param>
         /// <param name="privateKey"> The RSA private key of a registered GitHub app installed in the specified repository.</param>
         /// <returns>A string value of the blob contents.</returns>
-        public async Task<string> ReadRepositoryBlobContentAsync(ApplicationConfig appConfig, string privateKey)
+        public static async Task<string> ReadRepositoryBlobContentAsync(ApplicationConfig appConfig, string privateKey)
         {
             if (appConfig == null)
             {

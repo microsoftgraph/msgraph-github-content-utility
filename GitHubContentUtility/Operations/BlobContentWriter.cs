@@ -14,7 +14,7 @@ namespace GitHubContentUtility.Operations
     /// <summary>
     /// Provides methods for writing contents to a specific blob in a GitHub repository.
     /// </summary>
-    public class BlobContentWriter
+    public static class BlobContentWriter
     {
         /// <summary>
         /// Writes contents to a specified blob in the specified GitHub repository.
@@ -23,7 +23,7 @@ namespace GitHubContentUtility.Operations
         /// for connecting to the specified GitHub repository.</param>
         /// <param name="privateKey">The RSA private key of a registered GitHub app installed in the specified repository.</param>
         /// <returns>A task.</returns>
-        public async Task WriteToRepositoryAsync(ApplicationConfig appConfig, string privateKey)
+        public static async Task WriteToRepositoryAsync(ApplicationConfig appConfig, string privateKey)
         {
             if (appConfig == null)
             {

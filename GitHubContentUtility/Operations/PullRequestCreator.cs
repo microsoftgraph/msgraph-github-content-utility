@@ -7,14 +7,13 @@ using System;
 using System.Threading.Tasks;
 using GitHubContentUtility.Common;
 using GitHubContentUtility.Services;
-using System.Linq;
 
 namespace GitHubContentUtility.Operations
 {
     /// <summary>
     /// Provides method for writing to a blob in a GitHub repository.
     /// </summary>
-    public class PullRequestCreator
+    public static class PullRequestCreator
     {
         /// <summary>
         /// Creates a Pull Request.
@@ -23,7 +22,7 @@ namespace GitHubContentUtility.Operations
         /// for connecting to the specified GitHub repository.</param>
         /// <param name="privateKey">The RSA private key of a registered GitHub app installed in the specified repository.</param>
         /// <returns>A task.</returns>
-        public async Task CreatePullRequestAsync(ApplicationConfig appConfig, string privateKey)
+        public static async Task CreatePullRequestAsync(ApplicationConfig appConfig, string privateKey)
         {
             if (appConfig == null)
             {
