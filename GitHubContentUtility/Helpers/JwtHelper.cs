@@ -18,7 +18,7 @@ namespace GitHubContentUtility.Helpers
     /// <summary>
     /// Provides methods for extracting a private key and using it to encode a Jwt token.
     /// </summary>
-    public class JwtHelper
+    internal class JwtHelper
     {
         /// <summary>
         /// Gets private key and uses it to decode the jwt token.
@@ -26,7 +26,7 @@ namespace GitHubContentUtility.Helpers
         /// <param name="key"></param>
         /// <param name="payload"></param>
         /// <returns>jwt token</returns>
-        public static string CreateEncodedJwtToken(string key, Dictionary<string, object> payload)
+        internal static string CreateEncodedJwtToken(string key, Dictionary<string, object> payload)
         {
             // Generate JWT
             using var rsa = new RSACryptoServiceProvider();
