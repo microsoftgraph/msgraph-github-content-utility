@@ -21,7 +21,7 @@ namespace GitHubContentUtility.Operations
         /// </summary>
         /// <param name="appConfig">The application configuration object which contains values
         /// for connecting to the specified GitHub repository.</param>
-        /// <param name="privateKey"> The RSA private key of a registered GitHub app installed in the specified repository.</param>
+        /// <param name="privateKey">The RSA private key of a registered GitHub app installed in the specified repository.</param>
         /// <returns>A task.</returns>
         public async Task WriteToRepositoryAsync(ApplicationConfig appConfig, string privateKey)
         {
@@ -36,16 +36,10 @@ namespace GitHubContentUtility.Operations
 
             try
             {
-                string token = await GitHubAuthService.GetGithubAppTokenAsync(appConfig, privateKey);
-
-                // Pass the JWT as a bearer token to Octokit.net
-                var finalClient = new GitHubClient(new ProductHeaderValue(appConfig.GitHubAppName))
-                {
-                    Credentials = new Credentials(token, AuthenticationType.Bearer)
-                };
+                var gitHubClient = GitHubClientFactory.GetGitHubClient(appConfig, privateKey);
 
                 // Get repo references
-                var references = await finalClient.Git.Reference.GetAll(appConfig.GitHubOrganization, appConfig.GitHubRepoName);
+                var references = await gitHubClient.Git.Reference.GetAll(appConfig.GitHubOrganization, appConfig.GitHubRepoName);
 
                 // Check if the working branch is in the refs
                 var workingBranch = references.Where(reference => reference.Ref == $"refs/heads/{appConfig.WorkingBranch}").FirstOrDefault();
@@ -57,11 +51,11 @@ namespace GitHubContentUtility.Operations
                     var refBranch = references.Where(reference => reference.Ref == $"refs/heads/{appConfig.ReferenceBranch}").FirstOrDefault();
 
                     // Create new branch; exception will throw if branch already exists
-                    await finalClient.Git.Reference.Create(appConfig.GitHubOrganization, appConfig.GitHubRepoName,
+                    await gitHubClient.Git.Reference.Create(appConfig.GitHubOrganization, appConfig.GitHubRepoName,
                         new NewReference($"refs/heads/{appConfig.WorkingBranch}", refBranch.Object.Sha));
 
                     // Create blob
-                    await finalClient.Repository.Content.CreateFile(
+                    await gitHubClient.Repository.Content.CreateFile(
                         appConfig.GitHubOrganization,
                         appConfig.GitHubRepoName,
                         appConfig.FileContentPath,
@@ -72,18 +66,18 @@ namespace GitHubContentUtility.Operations
                 else
                 {
                     // Get reference of the working branch
-                    var workingReference = await finalClient.Git.Reference.Get(appConfig.GitHubOrganization,
+                    var workingReference = await gitHubClient.Git.Reference.Get(appConfig.GitHubOrganization,
                                                appConfig.GitHubRepoName,
                                                workingBranch.Ref);
 
                     // Get the latest commit of this branch
-                    var latestCommit = await finalClient.Git.Commit.Get(appConfig.GitHubOrganization,
+                    var latestCommit = await gitHubClient.Git.Commit.Get(appConfig.GitHubOrganization,
                                             appConfig.GitHubRepoName,
                                             workingReference.Object.Sha);
 
                     // Create blob
                     NewBlob blob = new NewBlob { Encoding = EncodingType.Utf8, Content = appConfig.FileContent };
-                    BlobReference blobRef = await finalClient.Git.Blob.Create(appConfig.GitHubOrganization,
+                    BlobReference blobRef = await gitHubClient.Git.Blob.Create(appConfig.GitHubOrganization,
                                                 appConfig.GitHubRepoName,
                                                 blob);
 
@@ -101,7 +95,7 @@ namespace GitHubContentUtility.Operations
                                     Sha = blobRef.Sha
                     });
 
-                    var newTree = await finalClient.Git.Tree.Create(appConfig.GitHubOrganization,
+                    var newTree = await gitHubClient.Git.Tree.Create(appConfig.GitHubOrganization,
                                     appConfig.GitHubRepoName,
                                     tree);
 
@@ -110,52 +104,15 @@ namespace GitHubContentUtility.Operations
                                         newTree.Sha,
                                         workingReference.Object.Sha);
 
-                    var commit = await finalClient.Git.Commit.Create(appConfig.GitHubOrganization,
+                    var commit = await gitHubClient.Git.Commit.Create(appConfig.GitHubOrganization,
                                     appConfig.GitHubRepoName,
                                     newCommit);
 
                     // Push the commit
-                    await finalClient.Git.Reference.Update(appConfig.GitHubOrganization,
+                    await gitHubClient.Git.Reference.Update(appConfig.GitHubOrganization,
                         appConfig.GitHubRepoName,
                         workingBranch.Ref,
                         new ReferenceUpdate(commit.Sha));
-                }
-
-                // Create a PR
-                var pullRequest =
-                    await finalClient.Repository.PullRequest.Create(appConfig.GitHubOrganization,
-                        appConfig.GitHubRepoName,
-                        new NewPullRequest(appConfig.PullRequestTitle,
-                            appConfig.WorkingBranch,
-                            appConfig.ReferenceBranch)
-                            { Body = appConfig.PullRequestBody });
-
-
-                // Add PR reviewers
-                if (appConfig.Reviewers != null)
-                {
-                    var reviewersResult = await finalClient.Repository.PullRequest.ReviewRequest.Create(appConfig.GitHubOrganization,
-                    appConfig.GitHubRepoName,
-                    pullRequest.Number,
-                    new PullRequestReviewRequest(appConfig.Reviewers.AsReadOnly(), null));
-                }
-
-                var issueUpdate = new IssueUpdate();
-
-                // Add PR assignee
-                appConfig.PullRequestAssignees?.ForEach(assignee => issueUpdate.AddAssignee(assignee));
-
-                // Add PR label
-                appConfig.PullRequestLabels?.ForEach(label => issueUpdate.AddLabel(label));
-
-                // Update the PR with the relevant info.
-                if (issueUpdate.Assignees != null ||
-                    issueUpdate.Labels != null)
-                {
-                    await finalClient.Issue.Update(appConfig.GitHubOrganization,
-                        appConfig.GitHubRepoName,
-                        pullRequest.Number,
-                        issueUpdate);
                 }
             }
             catch
