@@ -1,4 +1,4 @@
-﻿// ------------------------------------------------------------------------------------------------------------------------------------------------------
+// ------------------------------------------------------------------------------------------------------------------------------------------------------
 //  Copyright (c) Microsoft Corporation.  All Rights Reserved.  Licensed under the MIT License.  See License in the project root for license information.
 // ------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -65,8 +65,8 @@ namespace GitHubContentUtility.Operations
                 appConfig.PullRequestLabels?.ForEach(label => issueUpdate.AddLabel(label));
 
                 // Update the PR with the relevant info.
-                if (issueUpdate.Assignees != null ||
-                    issueUpdate.Labels != null)
+            if ((issueUpdate.Assignees != null && issueUpdate.Assignees.Any()) ||
+                issueUpdate.Labels != null && issueUpdate.Labels.Any())
                 {
                     await gitHubClient.Issue.Update(appConfig.GitHubOrganization,
                         appConfig.GitHubRepoName,
