@@ -36,38 +36,31 @@ namespace GitHubContentUtility.Services
                 throw new ArgumentNullException(nameof(privateKey), "Parameter cannot be null or empty");
             }
 
-            try
-            {
-                var dtoUtc = DateTimeOffset.UtcNow;
-                var payload = new Dictionary<string, object>
+            var dtoUtc = DateTimeOffset.UtcNow;
+            var payload = new Dictionary<string, object>
                 {
                     {"iat", dtoUtc.ToUnixTimeSeconds()},
                     {"exp", dtoUtc.AddMinutes(10).ToUnixTimeSeconds()}, // 10 minutes is the maximum time allowed
                     {"iss", appConfig.GitHubAppId} // The GitHub App Id
                 };
 
-                var jwtToken = JwtHelper.CreateEncodedJwtToken(privateKey, payload);
+            var jwtToken = JwtHelper.CreateEncodedJwtToken(privateKey, payload);
 
-                // Pass the JWT as a Bearer token to Octokit.net
-                var appClient = new GitHubClient(new ProductHeaderValue(appConfig.GitHubAppName))
-                {
-                    Credentials = new Credentials(jwtToken, AuthenticationType.Bearer)
-                };
-
-                // Get a list of installations for the authenticated GitHub App and installationID for the GitHub Organization
-                var installations = await appClient.GitHubApps.GetAllInstallationsForCurrent();
-                var id = installations.Where(installation => installation.Account.Login == appConfig.GitHubOrganization)
-                    .FirstOrDefault().Id;
-
-                // Create an Installation token for the GitHub Organization installation instance
-                var response = await appClient.GitHubApps.CreateInstallationToken(id);
-
-                return response.Token;
-            }
-            catch
+            // Pass the JWT as a Bearer token to Octokit.net
+            var appClient = new GitHubClient(new ProductHeaderValue(appConfig.GitHubAppName))
             {
-                throw;
-            }
+                Credentials = new Credentials(jwtToken, AuthenticationType.Bearer)
+            };
+
+            // Get a list of installations for the authenticated GitHub App and installationID for the GitHub Organization
+            var installations = await appClient.GitHubApps.GetAllInstallationsForCurrent();
+            var id = installations.Where(installation => installation.Account.Login == appConfig.GitHubOrganization)
+                .FirstOrDefault().Id;
+
+            // Create an Installation token for the GitHub Organization installation instance
+            var response = await appClient.GitHubApps.CreateInstallationToken(id);
+
+            return response.Token;
         }
     }
 }

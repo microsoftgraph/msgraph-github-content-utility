@@ -33,33 +33,26 @@ namespace GitHubContentUtility.Operations
                 throw new ArgumentNullException(nameof(privateKey), "Parameter cannot be null or empty");
             }
 
-            try
+            var gitHubClient = GitHubClientFactory.GetGitHubClient(appConfig, privateKey);
+
+            // Get repo references
+            var references = await gitHubClient.Git.Reference.GetAll(appConfig.GitHubOrganization, appConfig.GitHubRepoName);
+
+            // Check if the reference branch is in the refs
+            var referenceBranch = references.Where(reference => reference.Ref == $"refs/heads/{appConfig.ReferenceBranch}").FirstOrDefault();
+
+            if (referenceBranch == null)
             {
-                var gitHubClient = GitHubClientFactory.GetGitHubClient(appConfig, privateKey);
-
-                // Get repo references
-                var references = await gitHubClient.Git.Reference.GetAll(appConfig.GitHubOrganization, appConfig.GitHubRepoName);
-
-                // Check if the reference branch is in the refs
-                var referenceBranch = references.Where(reference => reference.Ref == $"refs/heads/{appConfig.ReferenceBranch}").FirstOrDefault();
-
-                if (referenceBranch == null)
-                {
-                    throw new ArgumentException(nameof(appConfig.ReferenceBranch), "Branch doesn't exist in the repository");
-                }
-
-                // Read from the reference branch
-                var fileContents = await gitHubClient.Repository.Content.GetAllContents(
-                       appConfig.GitHubOrganization,
-                       appConfig.GitHubRepoName,
-                       appConfig.FileContentPath);
-
-                return fileContents.FirstOrDefault()?.Content;
+                throw new ArgumentException(nameof(appConfig.ReferenceBranch), "Branch doesn't exist in the repository");
             }
-            catch
-            {
-                throw;
-            }
+
+            // Read from the reference branch
+            var fileContents = await gitHubClient.Repository.Content.GetAllContents(
+                   appConfig.GitHubOrganization,
+                   appConfig.GitHubRepoName,
+                   appConfig.FileContentPath);
+
+            return fileContents.FirstOrDefault()?.Content;
         }
     }
 }

@@ -31,20 +31,13 @@ namespace GitHubContentUtility.Services
                 throw new ArgumentNullException(nameof(privateKey), "Parameter cannot be null or empty");
             }
 
-            try
-            {
-                string token = GitHubAuthService.GetGithubAppTokenAsync(appConfig, privateKey)
+            string token = GitHubAuthService.GetGithubAppTokenAsync(appConfig, privateKey)
                                 .GetAwaiter().GetResult();
 
-                return new GitHubClient(new ProductHeaderValue(appConfig.GitHubAppName))
-                {
-                    Credentials = new Credentials(token, AuthenticationType.Bearer)
-                };
-            }
-            catch
+            return new GitHubClient(new ProductHeaderValue(appConfig.GitHubAppName))
             {
-                throw;
-            }
+                Credentials = new Credentials(token, AuthenticationType.Bearer)
+            };
         }
     }
 }

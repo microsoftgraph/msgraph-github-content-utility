@@ -1,4 +1,4 @@
-// ------------------------------------------------------------------------------------------------------------------------------------------------------
+﻿// ------------------------------------------------------------------------------------------------------------------------------------------------------
 //  Copyright (c) Microsoft Corporation.  All Rights Reserved.  Licensed under the MIT License.  See License in the project root for license information.
 // ------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -7,6 +7,7 @@ using System;
 using System.Threading.Tasks;
 using GitHubContentUtility.Common;
 using GitHubContentUtility.Services;
+using System.Linq;
 
 namespace GitHubContentUtility.Operations
 {
@@ -33,50 +34,43 @@ namespace GitHubContentUtility.Operations
                 throw new ArgumentNullException(nameof(privateKey), "Parameter cannot be null or empty");
             }
 
-            try
-            {
-                var gitHubClient = GitHubClientFactory.GetGitHubClient(appConfig, privateKey);
+            var gitHubClient = GitHubClientFactory.GetGitHubClient(appConfig, privateKey);
 
-                // Create a PR
-                // NB: If the PR already exists, this call will just throw an exception
-                var pullRequest =
-                    await gitHubClient.Repository.PullRequest.Create(appConfig.GitHubOrganization,
-                        appConfig.GitHubRepoName,
-                        new NewPullRequest(appConfig.PullRequestTitle,
-                            appConfig.WorkingBranch,
-                            appConfig.ReferenceBranch)
-                        { Body = appConfig.PullRequestBody });
-
-                // Add PR reviewers
-                if (appConfig.Reviewers != null)
-                {
-                    var reviewersResult = await gitHubClient.Repository.PullRequest.ReviewRequest.Create(appConfig.GitHubOrganization,
+            // Create a PR
+            // NB: If the PR already exists, this call will just throw an exception
+            var pullRequest =
+                await gitHubClient.Repository.PullRequest.Create(appConfig.GitHubOrganization,
                     appConfig.GitHubRepoName,
-                    pullRequest.Number,
-                    new PullRequestReviewRequest(appConfig.Reviewers.AsReadOnly(), null));
-                }
+                    new NewPullRequest(appConfig.PullRequestTitle,
+                        appConfig.WorkingBranch,
+                        appConfig.ReferenceBranch)
+                    { Body = appConfig.PullRequestBody });
 
-                var issueUpdate = new IssueUpdate();
+            // Add PR reviewers
+            if (appConfig.Reviewers != null)
+            {
+                var reviewersResult = await gitHubClient.Repository.PullRequest.ReviewRequest.Create(appConfig.GitHubOrganization,
+                appConfig.GitHubRepoName,
+                pullRequest.Number,
+                new PullRequestReviewRequest(appConfig.Reviewers.AsReadOnly(), null));
+            }
 
-                // Add PR assignee
-                appConfig.PullRequestAssignees?.ForEach(assignee => issueUpdate.AddAssignee(assignee));
+            var issueUpdate = new IssueUpdate();
 
-                // Add PR label
-                appConfig.PullRequestLabels?.ForEach(label => issueUpdate.AddLabel(label));
+            // Add PR assignee
+            appConfig.PullRequestAssignees?.ForEach(assignee => issueUpdate.AddAssignee(assignee));
 
-                // Update the PR with the relevant info.
+            // Add PR label
+            appConfig.PullRequestLabels?.ForEach(label => issueUpdate.AddLabel(label));
+
+            // Update the PR with the relevant info.
             if ((issueUpdate.Assignees != null && issueUpdate.Assignees.Any()) ||
                 issueUpdate.Labels != null && issueUpdate.Labels.Any())
-                {
-                    await gitHubClient.Issue.Update(appConfig.GitHubOrganization,
-                        appConfig.GitHubRepoName,
-                        pullRequest.Number,
-                        issueUpdate);
-                }
-            }
-            catch
             {
-                throw;
+                await gitHubClient.Issue.Update(appConfig.GitHubOrganization,
+                    appConfig.GitHubRepoName,
+                    pullRequest.Number,
+                    issueUpdate);
             }
         }
     }
