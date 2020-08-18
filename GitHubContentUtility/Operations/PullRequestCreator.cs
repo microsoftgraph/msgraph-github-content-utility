@@ -64,8 +64,8 @@ namespace GitHubContentUtility.Operations
             appConfig.PullRequestLabels?.ForEach(label => issueUpdate.AddLabel(label));
 
             // Update the PR with the relevant info.
-            if ((issueUpdate.Assignees != null && issueUpdate.Assignees.Any()) ||
-                issueUpdate.Labels != null && issueUpdate.Labels.Any())
+            if (issueUpdate.Assignees?.Count > 0 ||
+                issueUpdate.Labels?.Count > 0)
             {
                 await gitHubClient.Issue.Update(appConfig.GitHubOrganization,
                     appConfig.GitHubRepoName,
