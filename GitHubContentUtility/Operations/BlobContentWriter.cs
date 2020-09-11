@@ -49,69 +49,58 @@ namespace GitHubContentUtility.Operations
                 var refBranch = references.Where(reference => reference.Ref == $"refs/heads/{appConfig.ReferenceBranch}").FirstOrDefault();
 
                 // Create new branch; exception will throw if branch already exists
-                await gitHubClient.Git.Reference.Create(appConfig.GitHubOrganization, appConfig.GitHubRepoName,
+                workingBranch = await gitHubClient.Git.Reference.Create(appConfig.GitHubOrganization, appConfig.GitHubRepoName,
                     new NewReference($"refs/heads/{appConfig.WorkingBranch}", refBranch.Object.Sha));
-
-                // Create blob
-                await gitHubClient.Repository.Content.CreateFile(
-                    appConfig.GitHubOrganization,
-                    appConfig.GitHubRepoName,
-                    appConfig.FileContentPath,
-                    new CreateFileRequest(appConfig.CommitMessage,
-                        appConfig.FileContent,
-                        appConfig.WorkingBranch));
             }
-            else
-            {
-                // Get reference of the working branch
-                var workingReference = await gitHubClient.Git.Reference.Get(appConfig.GitHubOrganization,
-                                           appConfig.GitHubRepoName,
-                                           workingBranch.Ref);
 
-                // Get the latest commit of this branch
-                var latestCommit = await gitHubClient.Git.Commit.Get(appConfig.GitHubOrganization,
-                                        appConfig.GitHubRepoName,
-                                        workingReference.Object.Sha);
+            // Get reference of the working branch
+            var workingReference = await gitHubClient.Git.Reference.Get(appConfig.GitHubOrganization,
+                                       appConfig.GitHubRepoName,
+                                       workingBranch.Ref);
 
-                // Create blob
-                NewBlob blob = new NewBlob { Encoding = EncodingType.Utf8, Content = appConfig.FileContent };
-                BlobReference blobRef = await gitHubClient.Git.Blob.Create(appConfig.GitHubOrganization,
-                                            appConfig.GitHubRepoName,
-                                            blob);
-
-                // Create new Tree
-                var tree = new NewTree { BaseTree = latestCommit.Tree.Sha };
-
-                var treeMode = (int)appConfig.TreeItemMode;
-
-                // Add items based on blobs
-                tree.Tree.Add(new NewTreeItem
-                {
-                    Path = appConfig.FileContentPath,
-                    Mode = treeMode.ToString(),
-                    Type = TreeType.Blob,
-                    Sha = blobRef.Sha
-                });
-
-                var newTree = await gitHubClient.Git.Tree.Create(appConfig.GitHubOrganization,
-                                appConfig.GitHubRepoName,
-                                tree);
-
-                // Create a commit
-                var newCommit = new NewCommit(appConfig.CommitMessage,
-                                    newTree.Sha,
+            // Get the latest commit of this branch
+            var latestCommit = await gitHubClient.Git.Commit.Get(appConfig.GitHubOrganization,
+                                    appConfig.GitHubRepoName,
                                     workingReference.Object.Sha);
 
-                var commit = await gitHubClient.Git.Commit.Create(appConfig.GitHubOrganization,
-                                appConfig.GitHubRepoName,
-                                newCommit);
+            // Create blob
+            NewBlob blob = new NewBlob { Encoding = EncodingType.Utf8, Content = appConfig.FileContent };
+            BlobReference blobRef = await gitHubClient.Git.Blob.Create(appConfig.GitHubOrganization,
+                                        appConfig.GitHubRepoName,
+                                        blob);
 
-                // Push the commit
-                await gitHubClient.Git.Reference.Update(appConfig.GitHubOrganization,
-                    appConfig.GitHubRepoName,
-                    workingBranch.Ref,
-                    new ReferenceUpdate(commit.Sha));
-            }
+            // Create new Tree
+            var tree = new NewTree { BaseTree = latestCommit.Tree.Sha };
+
+            var treeMode = (int)appConfig.TreeItemMode;
+
+            // Add items based on blobs
+            tree.Tree.Add(new NewTreeItem
+            {
+                Path = appConfig.FileContentPath,
+                Mode = treeMode.ToString(),
+                Type = TreeType.Blob,
+                Sha = blobRef.Sha
+            });
+
+            var newTree = await gitHubClient.Git.Tree.Create(appConfig.GitHubOrganization,
+                            appConfig.GitHubRepoName,
+                            tree);
+
+            // Create a commit
+            var newCommit = new NewCommit(appConfig.CommitMessage,
+                                newTree.Sha,
+                                workingReference.Object.Sha);
+
+            var commit = await gitHubClient.Git.Commit.Create(appConfig.GitHubOrganization,
+                            appConfig.GitHubRepoName,
+                            newCommit);
+
+            // Push the commit
+            await gitHubClient.Git.Reference.Update(appConfig.GitHubOrganization,
+                appConfig.GitHubRepoName,
+                workingBranch.Ref,
+                new ReferenceUpdate(commit.Sha));
         }
     }
 }
