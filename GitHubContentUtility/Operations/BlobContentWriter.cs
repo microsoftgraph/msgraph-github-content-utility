@@ -63,26 +63,29 @@ namespace GitHubContentUtility.Operations
                                     appConfig.GitHubRepoName,
                                     workingReference.Object.Sha);
 
-            // Create blob
-            NewBlob blob = new NewBlob { Encoding = EncodingType.Utf8, Content = appConfig.FileContent };
-            BlobReference blobRef = await gitHubClient.Git.Blob.Create(appConfig.GitHubOrganization,
-                                        appConfig.GitHubRepoName,
-                                        blob);
-
-            // Create new Tree
-            var tree = new NewTree { BaseTree = latestCommit.Tree.Sha };
-
+            NewTree tree = new NewTree { BaseTree = latestCommit.Tree.Sha };
             var treeMode = (int)appConfig.TreeItemMode;
 
-            // Add items based on blobs
-            tree.Tree.Add(new NewTreeItem
+            foreach (var contentPath in appConfig.FileContentPaths)
             {
-                Path = appConfig.FileContentPath,
-                Mode = treeMode.ToString(),
-                Type = TreeType.Blob,
-                Sha = blobRef.Sha
-            });
+                var key = contentPath.Key;
 
+                // Create blob
+                NewBlob blob = new NewBlob { Encoding = EncodingType.Utf8, Content = appConfig.FileContents[key] };
+                BlobReference blobRef = await gitHubClient.Git.Blob.Create(appConfig.GitHubOrganization,
+                                            appConfig.GitHubRepoName,
+                                            blob);
+
+                // Add items based on blobs
+                tree.Tree.Add(new NewTreeItem
+                {
+                    Path = appConfig.FileContentPaths[key],
+                    Mode = treeMode.ToString(),
+                    Type = TreeType.Blob,
+                    Sha = blobRef.Sha
+                });
+            }
+            
             var newTree = await gitHubClient.Git.Tree.Create(appConfig.GitHubOrganization,
                             appConfig.GitHubRepoName,
                             tree);

@@ -40,16 +40,16 @@ namespace GitHubContentUtility.Common
         /// The remote branch which is the base reference of the <see cref="WorkingBranch"/>
         /// </summary>
         public string ReferenceBranch { get; set; }
-
+        
         /// <summary>
-        /// The path of a file content in a repository branch
+        /// The paths of file contents in a repository branch
         /// </summary>
-        public string FileContentPath { get; set; }
-
+        public Dictionary<string, string> FileContentPaths { get; set; }
+        
         /// <summary>
-        /// The string contents of a file in a respository branch
+        /// The string contents of files in a respository branch
         /// </summary>
-        public string FileContent { get; set; }
+        public Dictionary<string, string> FileContents { get; set; } = new Dictionary<string, string>();
 
         /// <summary>
         /// The commit message
