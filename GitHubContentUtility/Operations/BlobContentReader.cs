@@ -2,11 +2,12 @@
 //  Copyright (c) Microsoft Corporation.  All Rights Reserved.  Licensed under the MIT License.  See License in the project root for license information.
 // ------------------------------------------------------------------------------------------------------------------------------------------------------
 
-using System;
-using System.Linq;
-using System.Threading.Tasks;
 using GitHubContentUtility.Common;
 using GitHubContentUtility.Services;
+using System;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 
 namespace GitHubContentUtility.Operations
 {
@@ -47,12 +48,13 @@ namespace GitHubContentUtility.Operations
             }
 
             // Read from the reference branch
-            var fileContents = await gitHubClient.Repository.Content.GetAllContents(
-                   appConfig.GitHubOrganization,
-                   appConfig.GitHubRepoName,
-                   appConfig.FileContentPath);
+            var fileContents = await gitHubClient.Repository.Content.GetRawContentByRef(
+                appConfig.GitHubOrganization, 
+                appConfig.GitHubRepoName, 
+                appConfig.FileContentPath,
+                appConfig.ReferenceBranch);
 
-            return fileContents.FirstOrDefault()?.Content;
+            return Encoding.UTF8.GetString(fileContents);
         }
     }
 }
