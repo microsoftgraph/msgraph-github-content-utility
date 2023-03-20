@@ -70,20 +70,27 @@ namespace GitHubContentUtility.Operations
             {
                 var key = contentPath.Key;
 
-                // Create blob
-                NewBlob blob = new NewBlob { Encoding = EncodingType.Utf8, Content = appConfig.FileContents[key] };
-                BlobReference blobRef = await gitHubClient.Git.Blob.Create(appConfig.GitHubOrganization,
-                                            appConfig.GitHubRepoName,
-                                            blob);
-
-                // Add items based on blobs
-                tree.Tree.Add(new NewTreeItem
+                if (!appConfig.FileContents.TryGetValue(key, out _))
                 {
-                    Path = appConfig.FileContentPaths[key],
-                    Mode = treeMode.ToString(),
-                    Type = TreeType.Blob,
-                    Sha = blobRef.Sha
-                });
+                    continue;
+                }
+                else
+                {
+                    // Create blob
+                    NewBlob blob = new NewBlob { Encoding = EncodingType.Utf8, Content = appConfig.FileContents[key] };
+                    BlobReference blobRef = await gitHubClient.Git.Blob.Create(appConfig.GitHubOrganization,
+                                                appConfig.GitHubRepoName,
+                                                blob);
+
+                    // Add items based on blobs
+                    tree.Tree.Add(new NewTreeItem
+                    {
+                        Path = appConfig.FileContentPaths[key],
+                        Mode = treeMode.ToString(),
+                        Type = TreeType.Blob,
+                        Sha = blobRef.Sha
+                    });
+                }
             }
             
             var newTree = await gitHubClient.Git.Tree.Create(appConfig.GitHubOrganization,
