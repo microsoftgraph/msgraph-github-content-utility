@@ -3,10 +3,12 @@
 // ------------------------------------------------------------------------------------------------------------------------------------------------------
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using GitHubContentUtility.Common;
 using GitHubContentUtility.Services;
+using Octokit;
 
 namespace GitHubContentUtility.Operations
 {
@@ -47,11 +49,15 @@ namespace GitHubContentUtility.Operations
             }
 
             // Read from the reference branch
-            var fileContents = await gitHubClient.Repository.Content.GetAllContents(
-                   appConfig.GitHubOrganization,
-                   appConfig.GitHubRepoName,
-                   appConfig.FileContentPath);
-
+            var fileContents = new List<RepositoryContent>();
+            foreach (var item in appConfig.FileContentPaths)
+            {
+                fileContents = (List<RepositoryContent>)await gitHubClient.Repository.Content.GetAllContents(
+                               appConfig.GitHubOrganization,
+                               appConfig.GitHubRepoName,
+                              item.Value);
+            }
+            
             return fileContents.FirstOrDefault()?.Content;
         }
     }
